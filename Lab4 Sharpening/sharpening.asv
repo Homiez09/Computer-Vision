@@ -1,0 +1,5 @@
+img = imread('dark_rays.jpg');
+blur_img = imboxfilt(img);
+out_img = imsharpen(blur_img);
+subplot(1,2,1, imshow(img));
+subplot(1,2, imshow(out_img));
