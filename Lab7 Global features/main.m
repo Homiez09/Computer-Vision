@@ -7,7 +7,7 @@ load('testLabel.mat');
 X = [];
 XTest = [];
 
-properties = {'Perimeter', 'Circularity'};
+properties = {'Perimeter', 'Circularity','MajorAxisLength', 'MinorAxisLength', 'Orientation'};
 
 
 for i = 1:25
@@ -19,7 +19,7 @@ for i = 1:25
     blur_img = im2double(imboxfilt(gray_img, 5555));
 
     output = gray_img ./ blur_img;
-    output = imgaussfilt(output, 9);
+    output = imgaussfilt(output, 10);
 
     level = graythresh(output);
     BW = ~imbinarize(output, level);
@@ -48,7 +48,7 @@ for i = 1:15
     blur_img = im2double(imboxfilt(gray_img, 5555));
 
     output = gray_img ./ blur_img;
-    output = imgaussfilt(output, 9);
+    output = imgaussfilt(output, 10);
 
     level = graythresh(output);
     BW = ~imbinarize(output, level);
