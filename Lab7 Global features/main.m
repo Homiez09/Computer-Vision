@@ -7,7 +7,11 @@ load('testLabel.mat');
 X = [];
 XTest = [];
 
-properties = {'Perimeter', 'Circularity','MajorAxisLength', 'MinorAxisLength', 'Orientation'};
+properties = {'Area', 'Perimeter', 'Circularity', 'Eccentricity', 'MajorAxisLength', 'MinorAxisLength', 'Orientation'};
+
+SIGMA = 6;
+
+FILTERSIZE = 6001;
 
 
 for i = 1:25
@@ -16,21 +20,24 @@ for i = 1:25
 
     % ----------------- Binary Image -----------------
     gray_img = im2double(rgb2gray(img));
-    blur_img = im2double(imboxfilt(gray_img, 5555));
+    blur_img = im2double(imboxfilt(gray_img, FILTERSIZE));
 
     output = gray_img ./ blur_img;
-    output = imgaussfilt(output, 10);
+    output = medfilt2(output, [3 3]);
 
     level = graythresh(output);
     BW = ~imbinarize(output, level);
     
-    BW_filled = imfill(BW, 'holes');
-    
+    BW_filled = imfill(BW, 'holes');   
 
     % --------------- Feature Extraction---------------
-    STATS = regionprops(BW_filled, properties);
+    STATS = regionprops(BW_filled, properties);     
 
-    X = [X; struct2table(STATS)];
+    if ~isempty(STATS)
+        [~, maxIdx] = max([STATS.Area]);
+        largestRegion = struct2table(STATS(maxIdx));  
+        X = [X; largestRegion(:, 2:end)]; 
+    end
     % -------------------------------------------------
 
 end
@@ -39,29 +46,32 @@ Mdl = fitcecoc(X,trainLabel);
 
 
 % -------------------------------- Prediction --------------------------------
-for i = 1:15
-    filename = ['testset/', num2str(i), '.jpg'];
-    img = imread(filename);
-
-    % ----------------- Binary Image -----------------
-    gray_img = im2double(rgb2gray(img));
-    blur_img = im2double(imboxfilt(gray_img, 5555));
-
-    output = gray_img ./ blur_img;
-    output = imgaussfilt(output, 10);
-
-    level = graythresh(output);
-    BW = ~imbinarize(output, level);
-    
-    BW_filled = imfill(BW, 'holes');
-    
-
-    % --------------- Feature Extraction---------------
-    STATS = regionprops(BW_filled, properties);
-
-    XTest = [XTest; struct2table(STATS)];
-    % -------------------------------------------------
+ for i = 1:15
+     filename = ['testset/', num2str(i), '.jpg'];
+     img = imread(filename);
+ 
+     % ----------------- Binary Image -----------------
+     gray_img = im2double(rgb2gray(img));
+     blur_img = im2double(imboxfilt(gray_img, FILTERSIZE));
+ 
+     output = gray_img ./ blur_img;
+     output = medfilt2(output, [3 3]);
+ 
+     level = graythresh(output);
+     BW = ~imbinarize(output, level);
+ 
+     BW_filled = imfill(BW, 'holes');
+ 
+     % --------------- Feature Extraction---------------
+     STATS = regionprops(BW_filled, properties);
+ 
+     if ~isempty(STATS)
+        [~, maxIdx] = max([STATS.Area]);
+        largestRegion = struct2table(STATS(maxIdx));  
+        XTest = [XTest; largestRegion(:, 2:end)]; 
+    end
+     % -------------------------------------------------
 end
 
-predictedLabels = predict(Mdl,XTest);
+predictedLabels = predict(Mdl, XTest);
 table(testLabel(:),predictedLabels (:),'VariableNames',{'TrueLabels','PredictedLabels'})
