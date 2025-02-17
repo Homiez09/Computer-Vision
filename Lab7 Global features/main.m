@@ -9,9 +9,7 @@ XTest = [];
 
 properties = {'Area', 'Perimeter', 'Circularity', 'Eccentricity', 'MajorAxisLength', 'MinorAxisLength', 'Orientation'};
 
-SIGMA = 6;
-
-FILTERSIZE = 6001;
+FILTERSIZE = 5555;
 
 
 for i = 1:25
